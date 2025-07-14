@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudCFO n8n Architecture - Comprehensive Node Mapping</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+            color: #2c3e50;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .filters {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .filter-group label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        select, input {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+        }
+        
+        .stats {
+            padding: 20px 30px;
+            background: #e8f0fe;
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            padding: 30px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 14px;
+        }
+        
+        th {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: top;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .module-name {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 1.1em;
+        }
+        
+        .node-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .community-node {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .standard-node {
+            background: #e8f5e9;
+            color: #388e3c;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .api-badge {
+            background: #fff3e0;
+            color: #e65100;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            margin: 2px 0;
+            display: inline-block;
+        }
+        
+        .service-badge {
+            background: #f3e5f5;
+            color: #6a1b9a;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            margin: 2px 0;
+            display: inline-block;
+        }
+        
+        .milestone-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .milestone-1 { background: #28a745; }
+        .milestone-2 { background: #17a2b8; }
+        .milestone-3 { background: #ffc107; color: #212529; }
+        .milestone-4 { background: #dc3545; }
+        
+        .key-provider {
+            font-size: 0.8em;
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        .clickable {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .clickable:hover {
+            transform: scale(1.05);
+        }
+        
+        .export-buttons {
+            padding: 20px 30px;
+            display: flex;
+            gap: 10px;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        @media print {
+            .filters, .export-buttons {
+                display: none;
+            }
+            
+            th {
+                position: static;
+            }
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.2em;
+            color: #6c757d;
+        }
+        
+        @media (max-width: 1200px) {
+            table {
+                font-size: 12px;
+            }
+            
+            th, td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>CloudCFO n8n Architecture</h1>
+            <p class="subtitle">Comprehensive Node Mapping & Integration Requirements</p>
+        </header>
+        
+        <div class="filters">
+            <div class="filter-group">
+                <label>Filter by Module:</label>
+                <select id="moduleFilter">
+                    <option value="">All Modules</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Filter by Node Type:</label>
+                <select id="nodeTypeFilter">
+                    <option value="">All Types</option>
+                    <option value="community">Community Nodes Only</option>
+                    <option value="standard">Standard Nodes Only</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Filter by Milestone:</label>
+                <select id="milestoneFilter">
+                    <option value="">All Milestones</option>
+                    <option value="1">Milestone 1</option>
+                    <option value="2">Milestone 2</option>
+                    <option value="3">Milestone 3</option>
+                    <option value="4">Milestone 4</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalModules">13</div>
+                <div class="stat-label">Total Modules</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalNodes">0</div>
+                <div class="stat-label">Total Nodes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="communityNodes">0</div>
+                <div class="stat-label">Community Nodes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalAPIs">0</div>
+                <div class="stat-label">APIs Required</div>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <table id="nodesTable">
+                <thead>
+                    <tr>
+                        <th>Module</th>
+                        <th>Node Name</th>
+                        <th>Description</th>
+                        <th>Node Type</th>
+                        <th>APIs Required</th>
+                        <th>Self-Hosted Services</th>
+                        <th>Milestone</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Table content will be generated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="export-buttons">
+            <button class="btn btn-primary" onclick="exportToCSV()">Export to CSV</button>
+            <button class="btn btn-secondary" onclick="window.print()">Print Table</button>
+        </div>
+    </div>
+    
+    <script>
+        const nodesData = [
+            // Module 1: Queue-Based Document Intake
+            {
+                module: "1. Queue-Based Document Intake",
+                nodeName: "RabbitMQ Queue Trigger",
+                description: "Handles message queuing with priority support, ensures reliable document processing",
+                nodeType: "community",
+                communityPackage: "n8n-nodes-queue",
+                apis: [{name: "None", provider: ""}],
+                services: ["RabbitMQ"],
+                milestone: 1
+            },
+            {
+                module: "1. Queue-Based Document Intake",
+                nodeName: "Webhook",
+                description: "API endpoint for document upload with immediate response",
+                nodeType: "standard",
+                communityPackage: "",
+                apis: [{name: "None", provider: ""}],
+                services: ["None"],
+                milestone: 1
+            },
+            {
+                module: "1. Queue-Based Document Intake",
+                nodeName: "Webhook Response",
+                description: "Returns immediate 202 response with tracking ID, enables SSE",
+                nodeType: "community",
+                communityPackage: "n8n-nodes-webhook-response",
+                apis: [{name: "None", provider: ""}],
+                services: ["None"],
+                milestone: 1
+            },
+            {
+                module: "1. Queue-Based Document Intake",
+                nodeName: "Telegram Trigger",
+                description: "Receives documents from Telegram bot",
+                nodeType: "standard",
+                communityPackage: "",
+                apis: [{name: "Telegram Bot API", provider: "User"}],
+                services: ["None"],
+                milestone: 3
+            },
+            {
+                module: "1. Queue-Based Document Intake",
+                nodeName: "WhatsApp Integration",
+                description: "Receives documents via WhatsApp Business API",
+                nodeType: "standard",
+                communityPackage: "",
+                apis: [{name: "WhatsApp Business API", provider: "User"}],
+                services: ["None"],
+                milestone: 3
+            },
+            
+            // Module 2: Professional OCR Pipeline
+            {
+                module: "2. Professional OCR Pipeline",
+                nodeName: "Tesseract OCR",
+                description: "Free local OCR processing with preprocessing ($0 cost)",
+                nodeType: "community",
+                communityPackage: "n8n-nodes-tesseract",
+                apis: [{name: "None", provider: ""}],
+                services: ["Tesseract OCR"],
+                milestone: 1
+            },
+            {
+                module: "2. Professional OCR Pipeline",
+                nodeName: "PDF-Parse",
+                description: "Advanced PDF extraction with table and form support",
+                nodeType: "community",
+                communityPackage: "n8n-nodes-pdf-parse",
+                apis: [{name: "None", provider: ""}],
+                services: ["None"],
+                milestone: 1
+            },
+            {
+                module: "2. Professional OCR Pipeline",
+                nodeName: "Google Vision",
+                description: "Cloud OCR fallback for complex documents",
+                nodeType: "standard",
+                communityPackage: "",
+                apis: [{name: "Google Vision API", provider: "CloudCFO"}],
+                services: ["None"],
+                milestone: 1
+            },
+            
+            // Module 3: Self-Hosted Knowledge Base
+            {
+                module: "3. Self-Hosted Knowledge Base",
+                nodeName: "Baserow",
+                description: "Self-hosted Airtable alternative for pattern storage and matching",
+                nodeType: "community",
+                communityPackage: "n8n-nodes-baserow",
+                apis: [{name: "None", provider: ""}],
+                services: ["Baserow"],
+                milestone: 2
+            },
+            
+            // Module 4: LangChain AI Processing
+            {
+                module: "4. LangChain AI Processing",
+                nodeName: "LangChain Base",
+                description: "AI orchestration and chaining for document processing",
+                nodeType: "community",
+                communityPackage: "n8n-nodes-langchain",
+                apis: [{name: "OpenAI API", provider: "CloudCFO"}, {name: "OpenRouter API", provider: "CloudCFO"}],
+                services: ["None"],
+                milestone: 2
+            },
+            {
+                module: "4. LangChain AI Processing",
+                nodeName: "Vector Store",
+                description: "Stores and searches document embeddings for RAG",
+                nodeType: "community",
+                communityPackage: "n8n-nodes-langchain.vectorStore",
+                apis: [{name: "None", provider: ""}],
+                services: ["ChromaDB or Pinecone"],
+                milestone: 2
+            },
+            {
+                module: "4. LangChain AI Processing",
+                nodeName: "Embedding OpenAI",
+                description: "Creates text embeddings for similarity search",
+                nodeType: "community",
+                communityPackage: "n8n-nodes-langchain.embeddingOpenAI",
+                apis: [{name: "OpenAI API", provider: "CloudCFO"}],
+                services: ["None"],
+                milestone: 2
+            },
+            {
+                module: "4. LangChain AI Processing",
+                nodeName: "Chain LLM",
+                description: "Chains LLM calls with context for extraction",
+                nodeType: "community",
+                communityPackage: "n8n-nodes-langchain.chainLlm",
+                apis: [{name: "OpenAI API", provider: "CloudCFO"}],
+                services: ["None"],
+                milestone: 2
+            },
+            
+            // Module 5: ACID-Compliant Data Storage
+            {
+                module: "5. ACID-Compliant Data Storage",
+                nodeName: "Postgres-Multi",
+                description: "Supports database transactions with rollback capability",
+                nodeType: "community",
+                communityPackage: "n8n-nodes-postgres-multi",
+                apis: [{name: "None", provider: ""}],
+                services: ["PostgreSQL"],
+                milestone: 1
+            },
+            
+            // Module 6: Advanced Caching Layer
+            {
+                module: "6. Advanced Caching Layer",
+                nodeName: "Redis-Plus",
+                description: "Advanced caching with pub/sub and data structures",
+                nodeType: "community",
+                communityPackage: "n8n-nodes-redis-plus",
+                apis: [{name: "None", provider: ""}],
+                services: ["Redis"],
+                milestone: 1
+            },
+            
+            // Module 7: Enterprise Object Storage
+            {
+                module: "7. Enterprise Object Storage",
+                nodeName: "MinIO",
+                description: "S3-compatible self-hosted storage (50% cheaper than AWS)",
+                nodeType: "community",
+                communityPackage: "n8n-nodes-minio",
+                apis: [{name: "None", provider: ""}],
+                services: ["MinIO"],
+                milestone: 1
+            },
+            
+            // Module 8: Accounting Software Integrations
+            {
+                module: "8. Accounting Software Integrations",
+                nodeName: "QuickBooks",
+                description: "Creates expenses and syncs with QuickBooks Online",
+                nodeType: "standard",
+                communityPackage: "",
+                apis: [{name: "QuickBooks OAuth2", provider: "User"}],
+                services: ["None"],
+                milestone: 3
+            },
+            {
+                module: "8. Accounting Software Integrations",
+                nodeName: "Xero",
+                description: "Creates bills and syncs with Xero accounting",
+                nodeType: "standard",
+                communityPackage: "",
+                apis: [{name: "Xero OAuth2", provider: "User"}],
+                services: ["None"],
+                milestone: 3
+            },
+            {
+                module: "8. Accounting Software Integrations",
+                nodeName: "Carbon Accounting",
+                description: "Integrates with Persefoni/Watershed for ESG tracking",
+                nodeType: "standard",
+                communityPackage: "",
+                apis: [{name: "Persefoni API", provider: "User"}, {name: "Watershed API", provider: "User"}],
+                services: ["None"],
+                milestone: 3
+            },
+            
+            // Module 9: Banking Integration
+            {
+                module: "9. Banking Integration",
+                nodeName: "Plaid",
+                description: "Connects to 12,000+ banks for transaction data",
+                nodeType: "standard",
+                communityPackage: "",
+                apis: [{name: "Plaid API", provider: "CloudCFO"}],
+                services: ["None"],
+                milestone: 3
+            },
+            
+            // Module 10: Real-time Communication
+            {
+                module: "10. Real-time Communication",
+                nodeName: "SSE (Server-Sent Events)",
+                description: "Real-time status updates to frontend",
+                nodeType: "community",
+                communityPackage: "n8n-nodes-webhook-response",
+                apis: [{name: "None", provider: ""}],
+                services: ["None"],
+                milestone: 1
+            },
+            {
+                module: "10. Real-time Communication",
+                nodeName: "Email",
+                description: "Sends notification emails",
+                nodeType: "standard",
+                communityPackage: "",
+                apis: [{name: "SMTP/Email Service", provider: "CloudCFO"}],
+                services: ["None"],
+                milestone: 3
+            },
+            {
+                module: "10. Real-time Communication",
+                nodeName: "Telegram",
+                description: "Sends notifications via Telegram",
+                nodeType: "standard",
+                communityPackage: "",
+                apis: [{name: "Telegram Bot API", provider: "User"}],
+                services: ["None"],
+                milestone: 3
+            },
+            {
+                module: "10. Real-time Communication",
+                nodeName: "Slack",
+                description: "Sends notifications to Slack channels",
+                nodeType: "standard",
+                communityPackage: "",
+                apis: [{name: "Slack API", provider: "User"}],
+                services: ["None"],
+                milestone: 3
+            },
+            
+            // Module 11: Professional Error Handling
+            {
+                module: "11. Professional Error Handling",
+                nodeName: "Sentry",
+                description: "Automatic error tracking and monitoring",
+                nodeType: "community",
+                communityPackage: "n8n-nodes-sentry",
+                apis: [{name: "Sentry API", provider: "CloudCFO"}],
+                services: ["Sentry (optional self-host)"],
+                milestone: 2
+            },
+            {
+                module: "11. Professional Error Handling",
+                nodeName: "Dead Letter Queue",
+                description: "Stores failed messages for manual review",
+                nodeType: "community",
+                communityPackage: "n8n-nodes-queue",
+                apis: [{name: "None", provider: ""}],
+                services: ["RabbitMQ"],
+                milestone: 1
+            },
+            
+            // Module 12: Analytics & Monitoring
+            {
+                module: "12. Analytics & Monitoring",
+                nodeName: "Baserow Analytics",
+                description: "Stores and queries analytics data",
+                nodeType: "community",
+                communityPackage: "n8n-nodes-baserow",
+                apis: [{name: "None", provider: ""}],
+                services: ["Baserow"],
+                milestone: 4
+            },
+            {
+                module: "12. Analytics & Monitoring",
+                nodeName: "Schedule Trigger",
+                description: "Runs periodic analytics collection",
+                nodeType: "standard",
+                communityPackage: "",
+                apis: [{name: "None", provider: ""}],
+                services: ["None"],
+                milestone: 4
+            },
+            {
+                module: "12. Analytics & Monitoring",
+                nodeName: "Grafana Integration",
+                description: "Optional dashboard visualization",
+                nodeType: "standard",
+                communityPackage: "",
+                apis: [{name: "None", provider: ""}],
+                services: ["Grafana (optional)"],
+                milestone: 4
+            },
+            
+            // Module 13: Utility Functions
+            {
+                module: "13. Utility Functions",
+                nodeName: "Various",
+                description: "Uses existing nodes from other modules for rate limiting, batch processing, etc.",
+                nodeType: "mixed",
+                communityPackage: "",
+                apis: [{name: "None", provider: ""}],
+                services: ["Uses existing services"],
+                milestone: 4
+            }
+        ];
+        
+        // Populate table
+        function populateTable(data = nodesData) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            let currentModule = '';
+            let moduleRowSpan = {};
+            
+            // Calculate rowspans for modules
+            data.forEach(node => {
+                moduleRowSpan[node.module] = (moduleRowSpan[node.module] || 0) + 1;
+            });
+            
+            data.forEach((node, index) => {
+                const row = document.createElement('tr');
+                
+                // Module cell (with rowspan)
+                if (node.module !== currentModule) {
+                    const moduleCell = document.createElement('td');
+                    moduleCell.className = 'module-name';
+                    moduleCell.textContent = node.module;
+                    moduleCell.rowSpan = moduleRowSpan[node.module];
+                    row.appendChild(moduleCell);
+                    currentModule = node.module;
+                }
+                
+                // Node name
+                const nodeCell = document.createElement('td');
+                nodeCell.className = 'node-name';
+                nodeCell.textContent = node.nodeName;
+                row.appendChild(nodeCell);
+                
+                // Description
+                const descCell = document.createElement('td');
+                descCell.textContent = node.description;
+                row.appendChild(descCell);
+                
+                // Node type
+                const typeCell = document.createElement('td');
+                if (node.nodeType === 'community') {
+                    typeCell.innerHTML = `<span class="community-node clickable">${node.communityPackage || 'Community'}</span>`;
+                } else if (node.nodeType === 'standard') {
+                    typeCell.innerHTML = '<span class="standard-node">Standard</span>';
+                } else {
+                    typeCell.innerHTML = '<span class="standard-node">Mixed</span>';
+                }
+                row.appendChild(typeCell);
+                
+                // APIs
+                const apiCell = document.createElement('td');
+                const apiContent = node.apis.map(api => {
+                    if (api.name === 'None') return '-';
+                    return `<div><span class="api-badge">${api.name}</span><br><span class="key-provider">Keys: ${api.provider}</span></div>`;
+                }).join('');
+                apiCell.innerHTML = apiContent;
+                row.appendChild(apiCell);
+                
+                // Services
+                const serviceCell = document.createElement('td');
+                const serviceContent = node.services.map(service => {
+                    if (service === 'None') return '-';
+                    return `<span class="service-badge">${service}</span>`;
+                }).join(' ');
+                serviceCell.innerHTML = serviceContent;
+                row.appendChild(serviceCell);
+                
+                // Milestone
+                const milestoneCell = document.createElement('td');
+                milestoneCell.innerHTML = `<span class="milestone-badge milestone-${node.milestone}">Milestone ${node.milestone}</span>`;
+                row.appendChild(milestoneCell);
+                
+                tbody.appendChild(row);
+            });
+            
+            updateStats(data);
+        }
+        
+        // Update statistics
+        function updateStats(data) {
+            const uniqueModules = [...new Set(data.map(n => n.module))].length;
+            const communityCount = data.filter(n => n.nodeType === 'community').length;
+            const uniqueAPIs = [...new Set(data.flatMap(n => n.apis.map(a => a.name)).filter(a => a !== 'None'))].length;
+            
+            document.getElementById('totalModules').textContent = uniqueModules;
+            document.getElementById('totalNodes').textContent = data.length;
+            document.getElementById('communityNodes').textContent = communityCount;
+            document.getElementById('totalAPIs').textContent = uniqueAPIs;
+        }
+        
+        // Populate module filter
+        function populateFilters() {
+            const moduleFilter = document.getElementById('moduleFilter');
+            const uniqueModules = [...new Set(nodesData.map(n => n.module))];
+            
+            uniqueModules.forEach(module => {
+                const option = document.createElement('option');
+                option.value = module;
+                option.textContent = module;
+                moduleFilter.appendChild(option);
+            });
+        }
+        
+        // Filter functionality
+        function applyFilters() {
+            const moduleFilter = document.getElementById('moduleFilter').value;
+            const nodeTypeFilter = document.getElementById('nodeTypeFilter').value;
+            const milestoneFilter = document.getElementById('milestoneFilter').value;
+            
+            let filteredData = nodesData;
+            
+            if (moduleFilter) {
+                filteredData = filteredData.filter(n => n.module === moduleFilter);
+            }
+            
+            if (nodeTypeFilter) {
+                filteredData = filteredData.filter(n => n.nodeType === nodeTypeFilter);
+            }
+            
+            if (milestoneFilter) {
+                filteredData = filteredData.filter(n => n.milestone == milestoneFilter);
+            }
+            
+            populateTable(filteredData);
+        }
+        
+        // Export to CSV
+        function exportToCSV() {
+            const headers = ['Module', 'Node Name', 'Description', 'Node Type', 'Community Package', 'APIs Required', 'Key Provider', 'Self-Hosted Services', 'Milestone'];
+            const rows = nodesData.map(node => [
+                node.module,
+                node.nodeName,
+                node.description,
+                node.nodeType,
+                node.communityPackage || '',
+                node.apis.map(a => a.name).join('; '),
+                node.apis.map(a => a.provider).filter(p => p).join('; '),
+                node.services.join('; '),
+                `Milestone ${node.milestone}`
+            ]);
+            
+            const csvContent = [headers, ...rows]
+                .map(row => row.map(cell => `"${cell}"`).join(','))
+                .join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'cloudcfo_nodes_mapping.csv';
+            link.click();
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            populateFilters();
+            populateTable();
+            
+            // Add event listeners
+            document.getElementById('moduleFilter').addEventListener('change', applyFilters);
+            document.getElementById('nodeTypeFilter').addEventListener('change', applyFilters);
+            document.getElementById('milestoneFilter').addEventListener('change', applyFilters);
+        });
+    </script>
+</body>
+</html>
